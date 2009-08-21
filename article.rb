@@ -15,6 +15,7 @@ class Article
   is :versioned, :on => :updated_at
 
   def auto_link
+    return if body.nil?
     keeps = []
     # replace everything currently within brackets with our constant
     # and save the results
