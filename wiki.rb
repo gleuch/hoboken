@@ -45,6 +45,22 @@ post '/' do
   end
 end
 
+get '/search' do
+  unless params[:q].blank?
+    q, page, per_page = params[:q].downcase, params[:page] || 1, 20
+
+    # Search across page, give higher rank on title.
+    # TODO : Fix problem w/ order in datamapper (prob custom sql query)
+    search = ["(LOWER(title) LIKE ? OR LOWER(body) LIKE ?)", "%#{q}%", "%#{q}%"]
+    order = [:created_at.desc]
+    #order = ["((CASE WHEN LOWER(title) LIKE ? THEN 2 ELSE 0 END) + (CASE WHEN LOWER(body) LIKE ? THEN 1 ELSE 0 END)), created_at DESC", "%#{q}%", "%#{q}%"]
+
+    @results = Article.all(:order => order, :conditions => search)
+  end
+
+  haml :search
+end
+
 get '/tags/:tag_name' do
   tag = Tag.first(:name => params[:tag_name])
   @tagged_articles = Tagging.all(:tag_id => tag.id, :order => [:id.desc]).map{|t| t.taggable}

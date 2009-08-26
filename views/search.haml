@@ -1,0 +1,15 @@
+- unless @results.nil?
+  %h1 Search Results
+  - if @results.length > 0
+    %p There are #{@results.length} result#{@results.length == 1 ? '' : 's'} for '#{params[:q]}'.
+    %dl
+      - @results.each do |r|
+        %dd
+          %h6
+            %a{:href => "/#{r.slug}"}= r.title
+      
+  - else
+    %p There were no page results for '#{params[:q]}'. Please try another search.
+- else
+  %h1 Search
+  %p Please enter in something to search.
