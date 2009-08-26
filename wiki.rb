@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'sinatra'
 
+require "sinatra-authentication"
+
 configure do
   %w(dm-core dm-is-versioned dm-timestamps dm-tags wikitext article).each { |lib| require lib }
 
@@ -15,6 +17,9 @@ configure do
   DataMapper.auto_upgrade!
 
   PARSER = Wikitext::Parser.new(:external_link_class => 'external', :internal_link_prefix => nil)
+  
+  # Set to true if user must login before create/edit
+  REQUIRE_LOGIN = false
 end
 
 helpers do
@@ -73,6 +78,8 @@ get '/:slug' do
   if @article
     haml :show
   else
+    login_required if REQUIRE_LOGIN
+
     @article = Article.new(:slug => params[:slug], :title => de_wikify(params[:slug]))
     haml :edit, :locals => {:action => ["Creating", "Create"]}
   end
@@ -84,11 +91,15 @@ get '/:slug/history' do
 end
 
 get '/:slug/edit' do
+  login_required if REQUIRE_LOGIN
+
   @article = Article.first(:slug => params[:slug])
   haml :edit, :locals => {:action => ["Editing", "Edit"]}
 end
 
 post '/:slug/edit' do
+  login_required if REQUIRE_LOGIN
+
   @article = Article.first(:slug => params[:slug])
   @article.body = params[:body] if params[:body]
   haml :revert
